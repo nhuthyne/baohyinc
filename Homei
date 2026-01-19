@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>Bao Hy InC | Instant Studio</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+    :root {
+        --bg-app: #0f172a;
+        --bg-panel: #1e293b;
+        --bg-hover: #334155;
+        --border: #1e293b;
+        --accent: #38bdf8;
+        --accent-glow: rgba(56, 189, 248, 0.15);
+        --text-primary: #f8fafc;
+        --text-secondary: #94a3b8;
+        --radius: 8px;
+    }
+
+    * { box-sizing: border-box; outline: none; }
+    
+    body {
+        margin: 0;
+        font-family: 'Inter', sans-serif;
+        background: var(--bg-app);
+        color: var(--text-primary);
+        height: 100vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+    }
+
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: var(--bg-app); }
+    ::-webkit-scrollbar-thumb { background: var(--bg-hover); border-radius: 4px; }
+    
+    header {
+        height: 60px;
+        background: var(--bg-panel);
+        border-bottom: 1px solid #334155;
+        display: flex;
+        align-items: center;
+        padding: 0 24px;
+        justify-content: space-between;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    }
+    
+    .brand {
+        font-weight: 700;
+        font-size: 18px;
+        background: linear-gradient(90deg, var(--text-primary), var(--accent));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        display: flex; align-items: center; gap: 8px;
+    }
+    
+    /* Trạng thái đã lưu */
+    .save-status {
+        font-size: 11px;
+        color: #10b981; /* Màu xanh lá báo hiệu an toàn */
+        font-weight: 500;
+        opacity: 0;
+        transition: opacity 0.5s;
+        margin-right: 15px;
+    }
+    .save-status.show { opacity: 1; }
+
+    .toolbar { display: flex; gap: 10px; align-items: center; }
+
+    button {
+        background: transparent;
+        color: var(--text-secondary);
+        border: 1px solid var(--bg-hover);
+        padding: 8px 16px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+        border-radius: var(--radius);
+        transition: all 0.2s ease;
+    }
+    
+    button:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+    button.primary {
+        background: var(--accent);
+        color: #0f172a;
+        border: none;
+        box-shadow: 0 4px 10px var(--accent-glow);
+    }
+    button.primary:hover { background: #0ea5e9; }
+
+    main { display: flex; flex: 1; height: calc(100vh - 60px); }
+
+    aside {
+        width: 240px;
+        background: #131c2e;
+        border-right: 1px solid var(--bg-hover);
+        display: flex;
+        flex-direction: column;
+        padding: 16px;
+    }
+
+    .sidebar-header {
+        font-size: 11px;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+        font-weight: 700;
+        letter-spacing: 1px;
+        margin-bottom: 12px;
+    }
+
+    .file-list { flex: 1; overflow-y: auto; }
+
+    .file-item {
+        padding: 10px 12px;
+        cursor: pointer;
+        font-size: 14px;
+        color: var(--text-secondary);
+        border-radius: var(--radius);
+        margin-bottom: 4px;
+        transition: all 0.1s;
+        font-weight: 500;
+        display: flex; align-items: center; gap: 8px;
+    }
+    
+    .file-item:hover { background: var(--bg-hover); color: var(--text-primary); }
+    .file-item.active { background: var(--accent-glow); color: var(--accent); border: 1px solid var(--accent); }
+
+    .workspace { flex: 1; display: flex; background: var(--bg-app); }
+
+    .panel {
+        flex: 1; display: flex; flex-direction: column;
+        border-right: 1px solid var(--bg-hover); min-width: 300px;
+    }
+    .panel:last-child { border-right: none; }
+
+    .panel-bar {
+        background: var(--bg-panel); padding: 10px 20px;
+        font-size: 12px; color: var(--text-secondary); font-weight: 600;
+        border-bottom: 1px solid var(--bg-hover);
+        display: flex; justify-content: space-between;
+    }
+
+    textarea {
+        flex: 1; background: var(--bg-app); color: #e2e8f0;
+        border: none; padding: 20px;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 14px; line-height: 1.6; resize: none;
+    }
+
+    iframe { flex: 1; border: none; background: white; }
+
+    /* Modal */
+    .modal-overlay {
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(4px);
+        display: none; justify-content: center; align-items: center; z-index: 100;
+    }
+    .modal {
+        background: var(--bg-panel); width: 550px; border-radius: 12px;
+        padding: 24px; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.5);
+        border: 1px solid var(--bg-hover);
+    }
+    .link-box {
+        width: 100%; height: 100px; background: var(--bg-app);
+        border: 1px solid var(--bg-hover); color: var(--accent);
+        margin: 15px 0; padding: 12px; font-family: monospace; font-size: 13px;
+        border-radius: var(--radius); word-break: break-all;
+    }
+    .modal-footer { text-align: right; display: flex; justify-content: flex-end; gap: 10px; }
+</style>
+</head>
+<body>
+
+<header>
+    <div class="brand">Bao Hy InC</div>
+    <div class="toolbar">
+        <span id="saveStatus" class="save-status">Đã lưu tự động</span>
+        <button onclick="app.newFile()">+ Thêm Mới</button>
+        <button class="primary" onclick="app.getLink()">✨ Xuất Link Code</button>
+    </div>
+</header>
+
+<main>
+    <aside>
+        <div class="sidebar-header">DỰ ÁN CỦA BẠN</div>
+        <div id="fileList" class="file-list"></div>
+    </aside>
+
+    <div class="workspace">
+        <div class="panel">
+            <div class="panel-bar">
+                <span>Mã Nguồn (HTML/CSS)</span>
+                <span>Editor</span>
+            </div>
+            <textarea id="code" spellcheck="false" placeholder="// Viết mã code tuyệt vời của bạn tại đây..."></textarea>
+        </div>
+        <div class="panel">
+            <div class="panel-bar">
+                <span>Kết Quả (Real-time)</span>
+                <span>Live Preview</span>
+            </div>
+            <iframe id="previewFrame"></iframe>
+        </div>
+    </div>
+</main>
+
+<div class="modal-overlay" id="linkModal">
+    <div class="modal">
+        <h3 style="margin:0 0 10px 0; color:white">🚀 Liên kết hoạt động ngay</h3>
+        <p style="font-size:14px; color:#94a3b8">Sao chép link bên dưới và dán vào trình duyệt:</p>
+        <textarea id="outputLink" class="link-box" readonly></textarea>
+        <div class="modal-footer">
+            <button onclick="app.closeModal()">Đóng</button>
+            <button class="primary" onclick="app.copyLink()">Sao Chép</button>
+        </div>
+    </div>
+</div>
+
+<script>
+const app = {
+    key: "BaoHyInC_Instant_Data",
+    data: {},
+    current: null,
+
+    init() {
+        this.data = JSON.parse(localStorage.getItem(this.key) || "{}");
+        const files = Object.keys(this.data);
+        
+        if (files.length === 0) {
+            this.createDefault();
+        } else {
+            this.current = files[files.length - 1];
+        }
+        
+        this.renderList();
+        this.loadFile();
+        
+        // CẬP NHẬT TỨC THÌ (Không delay)
+        document.getElementById("code").addEventListener("input", () => {
+            this.updatePreview();
+            this.autoSave(); // Lưu ngay khi gõ
+        });
+    },
+
+    createDefault() {
+        const name = "Trang_Chu_01";
+        this.data[name] = `<!DOCTYPE html>
+<html>
+<head>
+<style>
+    body { font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #0f172a; color: white; margin: 0; }
+    h1 { color: #38bdf8; font-size: 3rem; text-shadow: 0 0 20px rgba(56,189,248,0.5); }
+</style>
+</head>
+<body>
+    <h1>Bao Hy InC</h1>
+</body>
+</html>`;
+        this.current = name;
+        this.saveToStorage();
+    },
+
+    renderList() {
+        const list = document.getElementById("fileList");
+        list.innerHTML = "";
+        for (let name in this.data) {
+            const div = document.createElement("div");
+            div.className = "file-item" + (name === this.current ? " active" : "");
+            div.textContent = name;
+            div.onclick = () => {
+                this.current = name;
+                this.loadFile();
+                this.renderList();
+            };
+            list.appendChild(div);
+        }
+    },
+
+    loadFile() {
+        if(!this.current) return;
+        document.getElementById("code").value = this.data[this.current];
+        this.updatePreview();
+    },
+
+    updatePreview() {
+        const content = document.getElementById("code").value;
+        const iframe = document.getElementById("previewFrame");
+        // Cập nhật iframe ngay lập tức
+        iframe.srcdoc = content;
+        // Cập nhật biến data cục bộ
+        this.data[this.current] = content;
+    },
+
+    // Hàm lưu tự động vào ổ cứng (LocalStorage)
+    autoSave() {
+        this.saveToStorage();
+        // Hiển thị chữ "Đã lưu tự động" nháy nhẹ
+        const status = document.getElementById("saveStatus");
+        status.classList.add("show");
+        clearTimeout(this.saveTimer);
+        this.saveTimer = setTimeout(() => {
+            status.classList.remove("show");
+        }, 1000);
+    },
+
+    newFile() {
+        const name = prompt("Nhập tên dự án mới:");
+        if(!name) return;
+        if(this.data[name]) return alert("Tên này đã tồn tại.");
+        this.data[name] = "";
+        this.current = name;
+        this.saveToStorage();
+        this.loadFile();
+        this.renderList();
+    },
+
+    saveToStorage() {
+        localStorage.setItem(this.key, JSON.stringify(this.data));
+    },
+
+    getLink() {
+        const code = document.getElementById("code").value;
+        if(!code.trim()) return alert("Mã nguồn trống.");
+        const encoded = encodeURIComponent(code);
+        const dataLink = `data:text/html;charset=utf-8,${encoded}`;
+        document.getElementById("outputLink").value = dataLink;
+        document.getElementById("linkModal").style.display = "flex";
+    },
+
+    copyLink() {
+        const box = document.getElementById("outputLink");
+        box.select();
+        document.execCommand("copy");
+        const btn = document.querySelector(".modal-footer button.primary");
+        btn.innerText = "Đã Sao Chép!";
+        setTimeout(() => btn.innerText = "Sao Chép", 2000);
+    },
+
+    closeModal() {
+        document.getElementById("linkModal").style.display = "none";
+    }
+};
+
+app.init();
+</script>
+
+</body>
+</html>
